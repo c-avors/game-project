@@ -1,6 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <functional>
+#include <any>
+#include "../include/option.h"
 
 //Class responsible for 
 class Menu : public sf::RectangleShape {
@@ -10,11 +13,11 @@ class Menu : public sf::RectangleShape {
     sf::Vector2f position;
     sf::Color backgroundColor;
     sf::Font font;
-    std::vector<sf::Text> options;
-    bool gridMode, pressed, theselect;
+    std::vector<Option> options;
+    bool gridMode, pressed, theselect = false;
 public:
     Menu(int xPos, int yPos, int width, int heigth, sf::Font font, sf::Color backgroundColor = sf::Color::Transparent,bool gridmode = 0);
-    void addOption(std::string text, int xPos, int yPos, int textsize = 24, sf::Color textColor = sf::Color::White);
+    void addOption(std::string text, std::function<void()> callback, int xPos, int yPos, int textsize = 24, sf::Color textColor = sf::Color::White);
     void goDown();
     void goUp();
     void goLeft();

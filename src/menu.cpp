@@ -1,4 +1,5 @@
 #include "../include/menu.h"
+#include "../include/option.h"
 #include <iostream>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
@@ -10,17 +11,9 @@ Menu::Menu(int xPos, int yPos, int width, int heigth, sf::Font font, sf::Color b
 
 }
 
-void Menu::addOption(std::string text, int xPos, int yPos, int textSize, sf::Color textColor) {
-    sf::Text option(font);
-    if(yPos+option.getGlobalBounds().size.y < position.x+getGlobalBounds().size.x){
-        option.setString(text);
-        option.setPosition(sf::Vector2f(position.x+xPos, position.y+yPos));
-        option.setCharacterSize(textSize);
-        option.setFillColor(textColor);
-        options.emplace_back(option);
-    }
-    else std::cout << "Out of bounds" << std::endl;
-    
+void Menu::addOption(std::string text, std::function<void()> callback, int xPos, int yPos, int textSize, sf::Color textColor) {
+    Option option(text, xPos, yPos, font, callback, textSize, textColor);
+    options.push_back(option);
 }
 
 void Menu::draw(sf::RenderWindow& window) {
@@ -34,7 +27,7 @@ void Menu::draw(sf::RenderWindow& window) {
 
 void Menu::goDown() {
     if( pos < static_cast<int>(options.size()) - 1){
-        options[pos].setOutlineThickness(0);
+        options[pos].setHighlight(0);
         ++pos;
         theselect = false;
       }
@@ -42,7 +35,7 @@ void Menu::goDown() {
 
 void Menu::goUp() {
     if( pos > 0){
-        options[pos].setOutlineThickness(0);
+        options[pos].setHighlight(0);
         --pos;
         theselect = false;
       }
@@ -60,9 +53,16 @@ void Menu::eventHandler(const sf::Event& event) {
         }
         else if (keyPressed->scancode == sf::Keyboard::Scancode::Enter && !theselect) {
             theselect = true;
-            std::cout << "Selected option index: " << pos << std::endl;
+            options[pos].trigger();
         }
     }
+
+    if (const auto* keyReleased = event.getIf<sf::Event::KeyReleased>()) {
+        if (keyReleased->scancode == sf::Keyboard::Scancode::Enter) {
+            theselect = false; 
+        }
+    }
+
 }
 
 void Menu::update(sf::RenderWindow& window) {
@@ -71,9 +71,8 @@ void Menu::update(sf::RenderWindow& window) {
     pos_mouse = sf::Mouse::getPosition(window);
     mouse_coord = window.mapPixelToCoords(pos_mouse);
 
-    // Apply active highlight styling
-    options[pos].setOutlineColor(sf::Color::Yellow);
-    options[pos].setOutlineThickness(3);
+    //Highlight selected option
+    options[pos].setHighlight(1);
 }
 
 void Menu::runMenu(sf::RenderWindow& window, const sf::Event& event) {
