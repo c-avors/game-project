@@ -6,7 +6,7 @@ Option::Option(const std::string& text, float xPos, float yPos, const sf::Font& 
     textElement.setString(text);
     textElement.setCharacterSize(textSize);
     textElement.setFillColor(textColor);
-    textElement.setPosition({xPos, yPos});
+    // setTextPosition({xPos, yPos});
 }
 
 void Option::draw(sf::RenderTarget& window, sf::RenderStates states) const {
@@ -26,6 +26,10 @@ void Option::setHighlight(bool isHighlighted) {
     } else {
         textElement.setOutlineThickness(0);
     }
+}
+
+void Option::setTextPosition(sf::Vector2f position) {
+    textElement.setPosition(position);
 }
 
 sf::FloatRect Option::getGlobalBounds() const {

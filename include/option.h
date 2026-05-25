@@ -8,7 +8,7 @@ class Option : public sf::Drawable {
 private:
     sf::Text textElement;
     std::function<void()> action;
-    ;
+    
 
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
@@ -18,6 +18,7 @@ public:
     void trigger() const;
 
     void setHighlight(bool isHighlighted);
+    void setTextPosition(sf::Vector2f position);
     
     // Checks option's bounds
     sf::FloatRect getGlobalBounds() const;

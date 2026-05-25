@@ -8,11 +8,30 @@ Menu::Menu(int xPos, int yPos, int width, int heigth, sf::Font font, sf::Color b
     setPosition(sf::Vector2f(xPos, yPos));
     setFillColor(backgroundColor);
     pos = 0;
-
+    pos2 = 0;
+    
 }
 
-void Menu::addOption(std::string text, std::function<void()> callback, int xPos, int yPos, int textSize, sf::Color textColor) {
+void Menu::toGrid() {
+    if(gridMode) {
+            if(options.size() == 4) {
+                optionsGrid.push_back({&options[0],&options[1]});
+                optionsGrid.push_back({&options[2],&options[3]});
+            }
+            else std::cout << "Wrong size";
+        }
+}
+
+void Menu::addOption(std::string text, std::function<void()> callback, int xPos, int yPos, int textSize, bool isCentered, sf::Color textColor) {
     Option option(text, xPos, yPos, font, callback, textSize, textColor);
+    float finalX = position.x + xPos; // Default: use the manually provided xPos
+
+    // 2. If centerText is true, overwrite finalX with the centering math
+    if (isCentered) {
+        float textWidth = option.getGlobalBounds().size.x;
+        finalX = position.x + ((getSize().x - textWidth) / 2.0f);
+    }
+    option.setTextPosition({finalX, position.y + yPos});
     options.push_back(option);
 }
 
@@ -26,19 +45,73 @@ void Menu::draw(sf::RenderWindow& window) {
 //Menu navigation
 
 void Menu::goDown() {
-    if( pos < static_cast<int>(options.size()) - 1){
+    if (gridMode) {
+        optionsGrid[pos][pos2]->setHighlight(0);
+        if (pos == 0) {
+            pos = 1;
+        }
+        else {
+            pos = 0;
+        }
+    }
+    else {
         options[pos].setHighlight(0);
-        ++pos;
-        theselect = false;
-      }
+        if( pos < options.size()-1){
+        ++pos;  
+        }
+        else pos = 0;
+    }
+      theselect = false;
 }
 
 void Menu::goUp() {
-    if( pos > 0){
+    if(gridMode) {
+        optionsGrid[pos][pos2]->setHighlight(0);
+        if (gridMode) {
+            if (pos == 1) {
+                pos = 0;
+            }
+            else {
+                pos = 1;
+            }
+    }
+    }
+    else {
         options[pos].setHighlight(0);
+        if( pos > 0){
         --pos;
-        theselect = false;
-      }
+        }
+    else 
+        pos = options.size() - 1;
+    }
+      theselect = false;
+}
+
+void Menu::goLeft() {
+    if (gridMode) {
+        optionsGrid[pos][pos2]->setHighlight(0);
+         if (pos2 == 1) {
+                pos2 = 0;
+            }
+            else {
+                pos2 = 1;
+            }
+            theselect = false;
+    }
+}
+
+void Menu::goRight() {
+    if (gridMode) {
+        optionsGrid[pos][pos2]->setHighlight(0);
+         if (pos2 == 0) {
+                pos2 = 1;
+            }
+            else {
+                pos2 = 0;
+            }
+            theselect = false;
+    }
+
 }
 
 void Menu::eventHandler(const sf::Event& event) {
@@ -51,9 +124,16 @@ void Menu::eventHandler(const sf::Event& event) {
         else if (keyPressed->scancode == sf::Keyboard::Scancode::Up) {
             goUp();
         }
+        else if (keyPressed->scancode == sf::Keyboard::Scancode::Left) {
+            goLeft();
+        }
+        else if (keyPressed->scancode == sf::Keyboard::Scancode::Right) {
+            goRight();
+        }
         else if (keyPressed->scancode == sf::Keyboard::Scancode::Enter && !theselect) {
             theselect = true;
-            options[pos].trigger();
+            if (gridMode) optionsGrid[pos][pos2]->trigger();
+            else options[pos].trigger();
         }
     }
 
@@ -72,7 +152,8 @@ void Menu::update(sf::RenderWindow& window) {
     mouse_coord = window.mapPixelToCoords(pos_mouse);
 
     //Highlight selected option
-    options[pos].setHighlight(1);
+    if (gridMode == 1) optionsGrid[pos][pos2]->setHighlight(1);
+    else options[pos].setHighlight(1);
 }
 
 void Menu::runMenu(sf::RenderWindow& window, const sf::Event& event) {

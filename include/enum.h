@@ -3,3 +3,7 @@ enum GameStage {
     Map,
     Battle
 };
+
+enum Moves {
+
+};
