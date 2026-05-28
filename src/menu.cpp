@@ -18,7 +18,7 @@ void Menu::toGrid() {
                 optionsGrid.push_back({&options[0],&options[1]});
                 optionsGrid.push_back({&options[2],&options[3]});
             }
-            else std::cout << "Wrong size";
+            else std::cerr << "Wrong size";
         }
 }
 

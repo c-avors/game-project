@@ -1,3 +1,5 @@
+#pragma once
+
 enum GameStage {
     MainMenu,
     Map,
@@ -6,4 +8,14 @@ enum GameStage {
 
 enum Moves {
 
+};
+
+enum Enemies {
+    Alginnus,
+    Cavalier,
+    Cheerot,
+    Golorch,
+    Khafiyn,
+    LakeDowager,
+    Luminant
 };
