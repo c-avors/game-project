@@ -6,8 +6,13 @@ enum GameStage {
     Battle
 };
 
-enum Moves {
-
+enum MoveName {
+    Tackle,
+    CloseCombat,
+    ArmThrust,
+    BulkUp,
+    DrainPunch,
+    QuickPunch
 };
 
 enum Enemies {
@@ -18,4 +23,17 @@ enum Enemies {
     Khafiyn,
     LakeDowager,
     Luminant
+};
+
+enum MoveType {
+    Physical,
+    Special,
+    Status
+};
+
+enum Effect {
+    None,
+    Poison,
+    AttackUp,
+    VeilUp,
 };

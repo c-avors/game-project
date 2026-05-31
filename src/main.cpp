@@ -70,6 +70,11 @@ int main() {
             }
             else if(currentStage == Battle) {
                 battleMenu.eventHandler(*event);
+                if(const auto* keyPressed = event->getIf<sf::Event::KeyReleased>()) {
+                    if(keyPressed->scancode == sf::Keyboard::Scancode::D) {
+                        entities[1]->attackAction(entities[0], entities[1]->getMoveset()[1]);
+                    }
+                }
             }
             else {
                 if(const auto* keyPressed = event->getIf<sf::Event::KeyReleased>()) {
@@ -116,7 +121,7 @@ int main() {
             assetManager.loadTexture("Luminant", "../sprites/Luminant.png");
 
             
-            auto billo = std::make_unique<PlayerCharacter>("Billo", testTexture, 10, 100, 70 ,140, 20, 10);
+            auto billo = std::make_unique<PlayerCharacter>("Billo", testTexture, 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
             billo->setScale({0.25,0.25});
             billo->setPosition({desktopWidth/6-billo->getGlobalBounds().size.x, 7*desktopHeight/8-billo->getGlobalBounds().size.y});
             billo->setHpBar();
