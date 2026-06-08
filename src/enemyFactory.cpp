@@ -12,6 +12,9 @@ EnemyFactory::EnemyFactory(AssetManager& assetManager) {
 
     presets.push_back({"Cheers", {Cheerot, Cheerot, Cheerot}});
     presets.push_back({"Toxapex", {Alginnus, Alginnus}});
+    presets.push_back({"Rose", {Golorch, Golorch, Khafiyn}});
+    presets.push_back({"Rosy", {Luminant, Luminant, Luminant, Luminant}});
+    presets.push_back({"Missingno", {Alginnus, Alginnus, LakeDowager}});
 }
 
 //spawns single enemy
@@ -30,7 +33,7 @@ void EnemyFactory::spawnPreset(std::vector<std::unique_ptr<Entity>>& entities, c
     auto chosenPreset = presets[choice];
 
 
-    float enemyPositionX = 0.65*width;
+    float enemyPositionX = 0.55*width;
     float enemyPositionY = heigth-0.125*heigth;
 
     for (auto &type : chosenPreset.presetEncounters) {

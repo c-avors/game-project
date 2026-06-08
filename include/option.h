@@ -17,6 +17,7 @@ public:
 
     void trigger() const;
 
+    void setName(const std::string& text);
     void setHighlight(bool isHighlighted);
     void setTextPosition(sf::Vector2f position);
     

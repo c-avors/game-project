@@ -6,7 +6,7 @@ Option::Option(const std::string& text, float xPos, float yPos, const sf::Font& 
     textElement.setString(text);
     textElement.setCharacterSize(textSize);
     textElement.setFillColor(textColor);
-    // setTextPosition({xPos, yPos});
+    setTextPosition({xPos, yPos});
 }
 
 void Option::draw(sf::RenderTarget& window, sf::RenderStates states) const {
@@ -34,4 +34,8 @@ void Option::setTextPosition(sf::Vector2f position) {
 
 sf::FloatRect Option::getGlobalBounds() const {
     return textElement.getGlobalBounds();
+}
+
+void Option::setName(const std::string& text) {
+    textElement.setString(text);
 }

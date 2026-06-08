@@ -26,7 +26,6 @@ void Menu::addOption(std::string text, std::function<void()> callback, int xPos,
     Option option(text, xPos, yPos, font, callback, textSize, textColor);
     float finalX = position.x + xPos; // Default: use the manually provided xPos
 
-    // 2. If centerText is true, overwrite finalX with the centering math
     if (isCentered) {
         float textWidth = option.getGlobalBounds().size.x;
         finalX = position.x + ((getSize().x - textWidth) / 2.0f);
@@ -160,4 +159,11 @@ void Menu::runMenu(sf::RenderWindow& window, const sf::Event& event) {
     eventHandler(event);
     update(window);
     draw(window);
+}
+
+void Menu::clearOptions() {
+    this->options.clear();
+    this->optionsGrid.clear();
+    this->pos = 0;
+    this->pos2 = 0;
 }

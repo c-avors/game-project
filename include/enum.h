@@ -6,6 +6,13 @@ enum GameStage {
     Battle
 };
 
+enum BattleState {
+    PlayerSelectMove,
+    EnemySelectMove,
+    Targeting,
+    PlayingActions
+};
+
 enum MoveName {
     Tackle,
     CloseCombat,

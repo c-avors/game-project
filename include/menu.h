@@ -28,4 +28,5 @@ public:
     void eventHandler(const sf::Event& event);
     void runMenu(sf::RenderWindow& window, const sf::Event& event);
     void toGrid();
+    void clearOptions();
 };

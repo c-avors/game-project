@@ -10,8 +10,9 @@
 #include "../include/enemyFactory.h"
 #include <memory>
 
-
-
+bool speedCompare(const std::unique_ptr<Entity> &e1, const std::unique_ptr<Entity> &e2) {
+    return (e1->getSpeed() > e2->getSpeed());
+}
 
 int main() {
     srand(time(nullptr));
@@ -22,13 +23,21 @@ int main() {
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     AssetManager assetManager;
     bool battleTriggered = false;
-    bool showBattleMenu = true;
+    bool showSelectMenu = true;
     bool isOnMap = false;
     bool mapInitialized = false;
+    bool battleTexturesLoaded = false;
     bool enemiesRendered = false;
-    int roundCount;
+    int roundCount = 1;
     float desktopWidth = desktop.size.x;
     float desktopHeight = desktop.size.y;
+    bool showMoveMenu = false;
+    bool moveMenuBuilt = false;
+
+    BattleState battleState = PlayerSelectMove; 
+    int currentCharacter = 0;
+    int chosenMoveSlot = -1; 
+    bool selectedTarget = false;
     sf::RenderWindow window(sf::VideoMode(sf::Vector2u(desktopWidth, desktopHeight)), "Game", sf::State::Fullscreen);
     window.setFramerateLimit(60);
     sf::Font mainFont("../fonts/Super Mindset.ttf");
@@ -46,17 +55,60 @@ int main() {
     mainMenu->addOption("Start", [&currentStage]() {currentStage = Map;}, 100, -10, 100, true);
     mainMenu->addOption("Exit", [&window] {window.close();}, 100, mainMenu->getLocalBounds().size.y/2-20, 100, true);
 
-    Menu battleMenu((desktopWidth-500)/2,desktopHeight/2-250,500,250,mainFont, sf::Color::Blue, true);
-    battleMenu.addOption("Billo",[&window, &entities, &showBattleMenu](){
-        PlayerCharacter *billo = dynamic_cast<PlayerCharacter *>(entities[0].get());
-        if(billo != nullptr) billo->setInBattle(1);
-        showBattleMenu = false;
+    Menu selectMenu((desktopWidth-500)/2,desktopHeight/2-250,500,250,mainFont, sf::Color::Blue, true);
+    selectMenu.addOption("Billo", [&entities, &showSelectMenu, &battleState]() {
+    for (const auto& entity : entities) {
+        PlayerCharacter* character = dynamic_cast<PlayerCharacter*>(entity.get());
+        if (character != nullptr && character->getName() == "Billo") {
+            character->setInBattle(true);
+            showSelectMenu = false;
+            battleState = PlayerSelectMove;
+            break; 
+        }
+    }
+    }, 0, 0);
 
-    },0,0);
-    battleMenu.addOption("Fari",[](){std::cout << "2" << std::endl;},300,0);
-    battleMenu.addOption("Izil",[](){std::cout << "3" << std::endl;},0,125);
-    battleMenu.addOption("Liaoyuan",[](){std::cout << "4" << std::endl;},300, 125);
-    battleMenu.toGrid();
+    selectMenu.addOption("Fari", [&entities, &showSelectMenu, &battleState]() {
+    for (const auto& entity : entities) {
+        PlayerCharacter* character = dynamic_cast<PlayerCharacter*>(entity.get());
+        if (character != nullptr && character->getName() == "Fari") {
+            character->setInBattle(true);
+            showSelectMenu = false;
+            battleState = PlayerSelectMove;
+            break;
+        }
+    }
+    }, 300, 0);
+
+    selectMenu.addOption("Izil", [&entities, &showSelectMenu, &battleState]() {
+    for (const auto& entity : entities) {
+        PlayerCharacter* character = dynamic_cast<PlayerCharacter*>(entity.get());
+        if (character != nullptr && character->getName() == "Izil") {
+            character->setInBattle(true);
+            showSelectMenu = false;
+            battleState = PlayerSelectMove;
+            break;
+        }
+    }
+    }, 0, 125);
+
+    selectMenu.addOption("Liaoyuan", [&entities, &showSelectMenu, &battleState]() {
+    for (const auto& entity : entities) {
+        PlayerCharacter* character = dynamic_cast<PlayerCharacter*>(entity.get());
+        if (character != nullptr && character->getName() == "Liaoyuan") {
+            character->setInBattle(true);
+            showSelectMenu = false;
+            battleState = PlayerSelectMove;
+            break;
+        }
+    }
+    }, 300, 125);
+    selectMenu.toGrid();
+    Menu moveMenu((desktopWidth-500)/2, 250, 500, 250, mainFont, sf::Color::Blue, true);
+
+    
+
+
     
     
     while (window.isOpen()) {
@@ -69,10 +121,18 @@ int main() {
                 mainMenu->eventHandler(*event);
             }
             else if(currentStage == Battle) {
-                battleMenu.eventHandler(*event);
+                if(showSelectMenu) {
+                    selectMenu.eventHandler(*event);
+                }
+                if(showMoveMenu) {
+                    moveMenu.eventHandler(*event);
+                }
+                if (selectedTarget == false && currentCharacter < entities.size()) {
+                    entities[currentCharacter]->targetHandler(*event, entities, selectedTarget, currentCharacter);
+                }
                 if(const auto* keyPressed = event->getIf<sf::Event::KeyReleased>()) {
                     if(keyPressed->scancode == sf::Keyboard::Scancode::D) {
-                        entities[1]->attackAction(entities[0], entities[1]->getMoveset()[1]);
+                        entities[1]->attackAction(entities[0].get(), entities[1]->getMoveset()[1]);
                     }
                 }
             }
@@ -110,36 +170,148 @@ int main() {
             
         }
         else if(currentStage == Battle) {
-            sf::Texture testTexture("../sprites/Billo.png");
-            assetManager.loadTexture("Alginnus", "../sprites/Alginnus.png");
-            assetManager.loadTexture("Baheema","../sprites/Baheema.png");
-            assetManager.loadTexture("Cavalier", "../sprites/Cavalier.png");
-            assetManager.loadTexture("Cheerot", "../sprites/Cheerot.png");
-            assetManager.loadTexture("Golorch", "../sprites/Golorch.png");
-            assetManager.loadTexture("Khafiyn", "../sprites/Khafiyn.png");
-            assetManager.loadTexture("LakeDowager", "../sprites/LakeDowager.png");
-            assetManager.loadTexture("Luminant", "../sprites/Luminant.png");
+            if (!battleTexturesLoaded) {
+                assetManager.loadTexture("Billo", "../sprites/Billo.png");
+                assetManager.loadTexture("Fari", "../sprites/Fari.png");
+                assetManager.loadTexture("Izil", "../sprites/Izil.png");
+                assetManager.loadTexture("Liaoyuan", "../sprites/Liaoyuan.png");
+                assetManager.loadTexture("Alginnus", "../sprites/Alginnus.png");
+                assetManager.loadTexture("Baheema","../sprites/Baheema.png");
+                assetManager.loadTexture("Cavalier", "../sprites/Cavalier.png");
+                assetManager.loadTexture("Cheerot", "../sprites/Cheerot.png");
+                assetManager.loadTexture("Golorch", "../sprites/Golorch.png");
+                assetManager.loadTexture("Khafiyn", "../sprites/Khafiyn.png");
+                assetManager.loadTexture("LakeDowager", "../sprites/LakeDowager.png");
+                assetManager.loadTexture("Luminant", "../sprites/Luminant.png");
 
+                auto billo = std::make_unique<PlayerCharacter>("Billo", assetManager.getTexture("Billo"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
+                auto fari = std::make_unique<PlayerCharacter>("Fari", assetManager.getTexture("Fari"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
+                auto izil = std::make_unique<PlayerCharacter>("Izil", assetManager.getTexture("Izil"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
+                auto liao = std::make_unique<PlayerCharacter>("Liaoyuan", assetManager.getTexture("Liaoyuan"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
+                billo->setScale({0.25,0.25});
+                billo->setPosition({desktopWidth/6-billo->getGlobalBounds().size.x, 7*desktopHeight/8-billo->getGlobalBounds().size.y});
+                billo->setHpBar();
+                entities.push_back(std::move(billo));
+
+                fari->setScale({0.25,0.25});
+                fari->setPosition({desktopWidth/6-fari->getGlobalBounds().size.x, 7*desktopHeight/8-fari->getGlobalBounds().size.y});
+                fari->setHpBar();
+                entities.push_back(std::move(fari));
+
+                izil->setScale({0.25,0.25});
+                izil->setPosition({desktopWidth/6-izil->getGlobalBounds().size.x, 7*desktopHeight/8-izil->getGlobalBounds().size.y});
+                izil->setHpBar();
+                entities.push_back(std::move(izil));
+
+                liao->setScale({0.25,0.25});
+                liao->setPosition({desktopWidth/6-liao->getGlobalBounds().size.x, 7*desktopHeight/8-liao->getGlobalBounds().size.y});
+                liao->setHpBar();
+                entities.push_back(std::move(liao));
+
+                battleTexturesLoaded = 1;
+            }
             
-            auto billo = std::make_unique<PlayerCharacter>("Billo", testTexture, 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
-            billo->setScale({0.25,0.25});
-            billo->setPosition({desktopWidth/6-billo->getGlobalBounds().size.x, 7*desktopHeight/8-billo->getGlobalBounds().size.y});
-            billo->setHpBar();
-            entities.push_back(std::move(billo));
+            
+            
             EnemyFactory enemyFactory(assetManager);
             if(enemiesRendered == false) {
                 enemyFactory.spawnPreset(entities,desktopWidth,desktopHeight);
                 enemiesRendered = true;
             }
+            if (battleState == PlayerSelectMove) {
+                std::cout << "Rendering: showMoveMenu=" << showMoveMenu << ", moveMenuBuilt=" << moveMenuBuilt << currentCharacter << std::endl;
+            if (currentCharacter < entities.size()) {
+                PlayerCharacter *playable = dynamic_cast<PlayerCharacter *>(entities[currentCharacter].get());
+                if (playable != nullptr && playable->getInBattle()) {
+                    showMoveMenu = true;
+                    
+                    if (!moveMenuBuilt) {
+                        moveMenu.clearOptions();
+                        moveMenu.addOption(playable->getMoveset()[0].getName(), [&chosenMoveSlot]() {
+                            chosenMoveSlot = 0;
+                        }, 50, 50); 
+
+                        moveMenu.addOption(playable->getMoveset()[1].getName(), [&chosenMoveSlot]() {
+                            chosenMoveSlot = 1;
+                        }, 300, 50);
+                        
+                        moveMenu.addOption(playable->getMoveset()[2].getName(), [&chosenMoveSlot]() {
+                            chosenMoveSlot = 2;
+                        }, 50, 150);
+                        
+                        moveMenu.addOption(playable->getMoveset()[3].getName(), [&chosenMoveSlot]() {
+                            chosenMoveSlot = 3;
+                        }, 300, 150);
+                        
+                        moveMenu.toGrid();
+                        moveMenuBuilt = true; 
+                    }
+
+                    moveMenu.update(window);
+
+                    if (chosenMoveSlot != -1) {
+                        showMoveMenu = false;
+                        moveMenuBuilt = false; 
+                        selectedTarget = false; 
+                        battleState = Targeting;
+                    }   
+                }
+                else if(!showSelectMenu){
+                    showMoveMenu = false;
+                    moveMenuBuilt = false;
+                    currentCharacter++;
+                }
+            }
+            else {
+                showMoveMenu = false;
+                moveMenuBuilt = false;
+                battleState = PlayingActions;
+            }
+        }
+
+            if(battleState == Targeting) {
+                Entity* attacker = entities[currentCharacter].get();
+                if (attacker->getTargeting() == currentCharacter) {
+                    attacker->targetRight(entities, currentCharacter);
+                }
+
+                // 1. Reset all entities to white first
+                for (auto& e : entities) {
+                    e->setColor(sf::Color::White);
+                }
+
+                // 2. Apply red only to the current target
+                int targetIndicatorIdx = attacker->getTargeting();
+                if (targetIndicatorIdx >= 0 && targetIndicatorIdx < entities.size()) {
+                    entities[targetIndicatorIdx]->setColor(sf::Color(255, 120, 120));
+                }
+
+                if (selectedTarget) {
+                    MoveInstance confirmedMove = attacker->getMoveset()[chosenMoveSlot];
+                    attacker->queueAction(confirmedMove.blueprint->id, attacker->getTargeting());
+                    if (targetIndicatorIdx >= 0 && targetIndicatorIdx < entities.size()) {
+                        entities[targetIndicatorIdx]->setColor(sf::Color::White);
+                    }
+                    chosenMoveSlot = -1;
+                    selectedTarget = false;
+                    currentCharacter++;
+                    moveMenuBuilt = false; 
+                    battleState = PlayerSelectMove; 
+                }
+            }
+
+            // if(battleState == PlayingActions)
+
             sf::Text Header(mainFont);
-            if(showBattleMenu){
+            if(showSelectMenu){
                 Header.setString("Select Fighter");
-                Header.setPosition({battleMenu.getPosition().x,0});
+                Header.setPosition({selectMenu.getPosition().x, 0});
                 Header.setCharacterSize(100);
-                battleMenu.update(window);
-                battleMenu.draw(window);
+                selectMenu.update(window);
+                selectMenu.draw(window);
                 window.draw(Header);
             }
+
             for (auto &entity : entities) {
                 PlayerCharacter *playable = dynamic_cast<PlayerCharacter *>(entity.get());
                 if (playable != nullptr) {
@@ -151,24 +323,26 @@ int main() {
                     entity->draw(window);
                 }
             }
-            
+
+            if (showMoveMenu && !showSelectMenu) {
+                moveMenu.update(window);
+                moveMenu.draw(window);
+            }
         }
+
         if(isOnMap){
-            if(offset<map->getPosition().x){
-                map->move({-elapsed.asSeconds()*240,0});
-                    
+            if(offset < map->getPosition().x){
+                map->move({-elapsed.asSeconds()*240, 0});
+            }
+            else if(offset > map->getPosition().x){
+                map->setPosition({offset, map->getPosition().y});
+                if (!battleTriggered) {
+                    currentStage = Battle;
+                    battleTriggered = true;
+                    assetManager.clearUnusedAssets();
                 }
-                else if(offset>map->getPosition().x){
-                    map->setPosition({offset,map->getPosition().y});
-                    if (!battleTriggered) {
-                        currentStage = Battle;
-                        battleTriggered = true;
-                        assetManager.clearUnusedAssets();
-                    }
-                }
+            }
         }
-        
-        
         
         window.display();
     }

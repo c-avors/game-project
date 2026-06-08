@@ -7,6 +7,7 @@
 
 struct Move {
     std::string name;
+    MoveName id;
     int power;
     int priority;
     int uses;
