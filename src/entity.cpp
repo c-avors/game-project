@@ -1,5 +1,6 @@
 #include "../include/entity.h"
 #include "../include/playerCharacter.h"
+#include <algorithm>
 
 bool isTargetValid(std::unique_ptr<Entity> &e) {
     // If it's an enemy, it's valid.
@@ -39,6 +40,8 @@ void Entity::attackAction(Entity *target, MoveInstance move) {
             case AttackUp:
                 std::cout << "attackUp" << std::endl;
                 break;
+            default:
+                break;
         }
         target->takeDamage(*this, move);
         move.use();      
@@ -46,7 +49,8 @@ void Entity::attackAction(Entity *target, MoveInstance move) {
 
 void Entity::takeDamage(Entity attacker, MoveInstance move) {
     if(move.blueprint->type == Physical) {
-        int damageTaken = (42.0f*move.blueprint->power*((float)(attacker.attack)/defence)/50)+2;
+        float effectiveDefence = (defence <= 0.0f) ? 1.0f : defence;
+        int damageTaken = (42.0f * move.blueprint->power * ((float)(attacker.attack) / effectiveDefence) / 50) + 2;
         std::cout << damageTaken <<std::endl;
         if (damageTaken <= currentHp) {
             currentHp-=damageTaken;
@@ -123,8 +127,8 @@ bool Entity::hasQueuedAction() const {
     return actionQueued;
 }
 
-MoveName Entity::getQueuedMoveName() const {
-    return queuedMove;
+MoveInstance Entity::getQueuedMove() const {
+    return moveDatabase.createInstance(queuedMove);
 }
 
 int Entity::getTargetIndex() const {
@@ -134,4 +138,8 @@ int Entity::getTargetIndex() const {
 void Entity::clearQueuedAction() {
     this->actionQueued = false;
     this->queuedTargetIndex = -1;
+}
+
+bool Entity::getIsDown() const {
+    return isDown;
 }

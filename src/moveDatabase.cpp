@@ -12,6 +12,6 @@ MoveInstance MoveDatabase::createInstance(MoveName name) const {
         if (it != registry.end()) {
             return MoveInstance{ &it->second, it->second.uses };
         }
-        std::cerr << "CRITICAL: Attempted to build non-existent move ID!\n";
+        std::cerr << "CRITICAL: Attempted to build non-existent move ID! "<< (int)name << std::endl;;
         return MoveInstance{};
     }

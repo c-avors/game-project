@@ -15,7 +15,7 @@ class Menu : public sf::RectangleShape {
     sf::Font font;
     std::vector<Option> options;
     std::vector<std::vector<Option*>> optionsGrid;
-    bool gridMode, pressed, theselect = false;
+    bool gridMode, pressed;
 public:
     Menu(int xPos, int yPos, int width, int heigth, sf::Font font, sf::Color backgroundColor = sf::Color::Transparent,bool gridmode = 0);
     void addOption(std::string text, std::function<void()> callback, int xPos, int yPos, int textsize = 24, bool centered = 0, sf::Color textColor = sf::Color::White);

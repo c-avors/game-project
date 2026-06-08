@@ -60,7 +60,6 @@ void Menu::goDown() {
         }
         else pos = 0;
     }
-      theselect = false;
 }
 
 void Menu::goUp() {
@@ -83,7 +82,6 @@ void Menu::goUp() {
     else 
         pos = options.size() - 1;
     }
-      theselect = false;
 }
 
 void Menu::goLeft() {
@@ -95,7 +93,6 @@ void Menu::goLeft() {
             else {
                 pos2 = 1;
             }
-            theselect = false;
     }
 }
 
@@ -108,7 +105,6 @@ void Menu::goRight() {
             else {
                 pos2 = 0;
             }
-            theselect = false;
     }
 
 }
@@ -129,8 +125,7 @@ void Menu::eventHandler(const sf::Event& event) {
         else if (keyPressed->scancode == sf::Keyboard::Scancode::Right) {
             goRight();
         }
-        else if (keyPressed->scancode == sf::Keyboard::Scancode::Enter && !theselect) {
-            theselect = true;
+        else if (keyPressed->scancode == sf::Keyboard::Scancode::Enter ) {
             if (gridMode) optionsGrid[pos][pos2]->trigger();
             else options[pos].trigger();
         }
@@ -138,7 +133,6 @@ void Menu::eventHandler(const sf::Event& event) {
 
     if (const auto* keyReleased = event.getIf<sf::Event::KeyReleased>()) {
         if (keyReleased->scancode == sf::Keyboard::Scancode::Enter) {
-            theselect = false; 
         }
     }
 

@@ -3,7 +3,8 @@
 enum GameStage {
     MainMenu,
     Map,
-    Battle
+    Battle,
+    Victory
 };
 
 enum BattleState {
@@ -11,6 +12,11 @@ enum BattleState {
     EnemySelectMove,
     Targeting,
     PlayingActions
+};
+
+enum AIType {
+    Basic,
+    Boss
 };
 
 enum MoveName {

@@ -42,10 +42,11 @@ public:
 
     int getSpeed() const;
     int getTargeting() const;
+    bool getIsDown() const;
 
     void queueAction(MoveName move, int targetIndex);
     bool hasQueuedAction() const;
-    MoveName getQueuedMoveName() const;
+    MoveInstance getQueuedMove() const;
     int getTargetIndex() const;
     void clearQueuedAction();
 
