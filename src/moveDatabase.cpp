@@ -3,7 +3,7 @@
 MoveDatabase::MoveDatabase() {
         registry[Tackle]      = {"Tackle", Tackle, 40, 0, 35, Physical};
         registry[QuickPunch]  = {"Quick Punch", QuickPunch, 40, 0, 30, Physical};
-        registry[ArmThrust]     = {"Low Kick", ArmThrust, 60, 0, 20, Physical};
+        registry[ArmThrust]     = {"Arm Thrust", ArmThrust, 60, 0, 20, Physical};
         registry[CloseCombat] = {"Close Combat", CloseCombat, 120, 0, 5, Physical};
     }
 

@@ -4,6 +4,8 @@ Enemy::Enemy(const std::string& name, const sf::Texture &texture, int speed, int
 
 }
 
+Enemy::Enemy(const Enemy& other) : Entity(other), ai(other.ai) {}
+
 AIType Enemy::getAI() const {
     return ai;
 }

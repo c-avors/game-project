@@ -22,9 +22,7 @@ std::unique_ptr<Entity> EnemyFactory::spawnEnemy(Enemies type) {
     auto it = enemyDatabase.find(type);
     if (it == enemyDatabase.end()) return nullptr;
 
-    const Enemy& enemy = it->second;
-
-    return std::make_unique<Enemy>(enemy);
+    return std::make_unique<Enemy>(it->second);
     
 }
 
@@ -38,6 +36,7 @@ void EnemyFactory::spawnPreset(std::vector<std::unique_ptr<Entity>>& entities, c
 
     for (auto &type : chosenPreset.presetEncounters) {
         auto enemy = spawnEnemy(type);
+        if (enemy) {
         enemy->setScale({0.25, 0.25});
         enemy->setPosition({enemyPositionX,enemyPositionY-enemy->getGlobalBounds().size.y});
         enemy->setHpBar();

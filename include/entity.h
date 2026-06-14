@@ -22,17 +22,16 @@ protected:
     sf::RectangleShape hpBarBase;
     sf::RectangleShape hpBarReal;
 public:
+    Entity(const Entity& other);
     Entity(const std::string& name, const sf::Texture &texture, int speed, int hp, int attack, int defence, int spAttack, int spDefence, std::array<MoveName, 4> baseMoveset);
     void setHpBar();
     void draw(sf::RenderWindow& window);
     void takeDamage(Entity attacker, MoveInstance move);
     void setTargeting(const int &target);
     void setDefaultMoves();
-    void setMoveInSlot(int slot, MoveName move) {
-        if (slot < moveset.size()) {
-            moveset[slot] = moveDatabase.createInstance(move);
-        }
-    }
+    void setMoveInSlot(int slot, MoveName move);
+    void setCurrentHp(const int &hp);
+
     void attackAction(Entity *target, MoveInstance move);
     const std::string& getName() const;
     std::array<MoveInstance, 4> getMoveset();
@@ -43,14 +42,14 @@ public:
     int getSpeed() const;
     int getTargeting() const;
     bool getIsDown() const;
+    int getBaseHp() const;
 
     void queueAction(MoveName move, int targetIndex);
     bool hasQueuedAction() const;
     MoveInstance getQueuedMove() const;
     int getTargetIndex() const;
     void clearQueuedAction();
-
-    virtual bool isTargetable() const { return true; }
+    bool isTargetValid(std::unique_ptr<Entity> &e);
 
     virtual ~Entity() = default;
 };

@@ -133,11 +133,6 @@ int main() {
                     entities[currentCharacter]->targetHandler(*event, entities, selectedTarget, currentCharacter);
                 }
             }
-            else if(currentStage == Map) {
-                if(const auto* keyPressed = event->getIf<sf::Event::KeyReleased>()) {
-                    offset -=750*map->getScale().x;
-                }
-            }
         }
         
         if(currentStage == MainMenu) {
@@ -155,7 +150,8 @@ int main() {
                 
                 map->setScale({0.5f, 0.5f});
                 auto mapsize = map->getGlobalBounds().size;
-                map->setPosition({(desktopWidth - 250 - 750*(roundCount-1)*map->getScale().x) / 2, (desktopHeight - mapsize.y) / 2});
+                map->setPosition({(desktopWidth - 250 ) / 2 - 750*(roundCount-1)*(map->getScale().x), (desktopHeight - mapsize.y) / 2});
+                offset=(desktopWidth - 250 ) / 2 - 750*roundCount*(map->getScale().x);
                 
                 party->setScale({0.1f, 0.1f});
                 party->setPosition({(desktopWidth - party->getGlobalBounds().size.x) / 2, (desktopHeight - party->getGlobalBounds().size.y) / 2});
@@ -213,7 +209,7 @@ int main() {
             
             
             
-            EnemyFactory enemyFactory(assetManager);
+            static EnemyFactory enemyFactory(assetManager);
             if(enemiesRendered == false) {
                 enemyFactory.spawnPreset(entities,desktopWidth,desktopHeight);
                 enemiesRendered = true;
@@ -270,28 +266,27 @@ int main() {
             }
 
             if(battleState == Targeting) {
+                //Setting first valid target
                 Entity* attacker = entities[currentCharacter].get();
-                if (attacker->getTargeting() == currentCharacter) {
+                auto targetIndex = attacker->getTargeting();
+                if (!attacker->isTargetValid(entities[targetIndex]) || targetIndex == currentCharacter) {
                     attacker->targetRight(entities, currentCharacter);
                 }
 
-                // 1. Reset all entities to white first
+                // Reset all entities to white first
                 for (auto& e : entities) {
                     e->setColor(sf::Color::White);
                 }
 
-                // 2. Apply red only to the current target
-                int targetIndicatorIdx = attacker->getTargeting();
-                if (targetIndicatorIdx >= 0 && targetIndicatorIdx < entities.size()) {
-                    entities[targetIndicatorIdx]->setColor(sf::Color(255, 120, 120));
+                // Apply red only to the current target
+                if (targetIndex >= 0 && targetIndex < entities.size()) {
+                    entities[targetIndex]->setColor(sf::Color(255, 120, 120));
                 }
 
+                // Queuing attack
                 if (selectedTarget) {
                     MoveInstance confirmedMove = attacker->getMoveset()[chosenMoveSlot];
                     attacker->queueAction(confirmedMove.blueprint->id, attacker->getTargeting());
-                    if (targetIndicatorIdx >= 0 && targetIndicatorIdx < entities.size()) {
-                        entities[targetIndicatorIdx]->setColor(sf::Color::White);
-                    }
                     chosenMoveSlot = -1;
                     selectedTarget = false;
                     currentCharacter++;
@@ -301,8 +296,10 @@ int main() {
             }
 
             if(battleState == EnemySelectMove) {
-                //Select Random Playable Character
+                //Select Random Playable Character to target
                 static std::vector<int> activePlayerIndices;
+                activePlayerIndices.clear();
+                activeFound = false;
                 if(!activeFound) {
                     for (int i = 0; i < entities.size(); ++i) {
                         PlayerCharacter *pc = dynamic_cast<PlayerCharacter *>(entities[i].get());
@@ -315,11 +312,17 @@ int main() {
                 
                 if (currentCharacter < entities.size()) {
                     Enemy *enemy = dynamic_cast<Enemy *>(entities[currentCharacter].get());
-                    
+                    //Checks if entity is enemy and can attack
                     if(enemy != nullptr && !enemy->getIsDown()) {
+                        //Basic AI attacks at random
                         if(enemy->getAI() == Basic) {
-                            MoveInstance confirmedMove = enemy->getMoveset()[rand()%4];
+                            for (int i = 0 ; i < 4; i++) {
+                                // std::cout << enemy->getMoveset()[i].getName();
+                            }
+                            auto randMove = rand()%4;
+                            MoveInstance confirmedMove = enemy->getMoveset()[randMove];
                             enemy->queueAction(confirmedMove.blueprint->id, activePlayerIndices[rand()%activePlayerIndices.size()]);
+                            std::cout << "::: " << confirmedMove.getName() <<std::endl;
                         }
                         currentCharacter++;
 
@@ -328,17 +331,20 @@ int main() {
                         currentCharacter++;
                     }
                 }
+                //Next battle phase
                 else {
                     battleState = PlayingActions;
                     currentCharacter = 0; 
                 }
             }
 
+            //Playing actions
             if(battleState == PlayingActions) {
                 std::sort(entities.begin(), entities.end(), speedCompare);
                 for(auto &entity : entities) {
                     if(entity->hasQueuedAction()) {
                         entity->attackAction(entities[entity->getTargetIndex()].get(),entity->getQueuedMove());
+                        std::cout << entity->getName() << " used " << entity->getQueuedMove().getName() << std::endl;
                         entity->clearQueuedAction();
                     }
 
@@ -366,7 +372,9 @@ int main() {
                     }
                 }
 
+                //Battle Won
                 if (!enemiesLeft) {
+                    //Reseting Flags
                     battleState = PlayerSelectMove;
                     enemiesRendered = false;
                     currentStage = Map; 
@@ -377,17 +385,23 @@ int main() {
                     moveMenuBuilt = false;
                     battleTriggered = false;
                     roundCount++;
-                    offset = (desktopWidth-250)/2-750/2*roundCount;
                     currentCharacter = 0;
                     for(auto &entity : entities) {
                         PlayerCharacter *playable = dynamic_cast<PlayerCharacter *>(entity.get());
                         if(playable != nullptr && playable->getInBattle()) {
                             playable->setInBattle(false);
                         }
+                        //Heal On Round 5
+                        if(playable != nullptr && roundCount == 5) {
+                            playable->setCurrentHp(playable->getBaseHp());
+                        }
                     }
                 }
+
+                //Game Over
                 if (!activePlayerLeft) {
-                    currentStage = MainMenu; // Or a dedicated "GameOver" stage
+                    //Reseting Flags
+                    currentStage = MainMenu;
                     entities.clear();
                     battleTriggered = false;
                     showSelectMenu = true;
@@ -403,9 +417,6 @@ int main() {
                     chosenMoveSlot = -1; 
                     roundCount = 1;
                     selectedTarget = false;
-                    offset = (desktopWidth-250)/2;
-                    auto mapsize = map->getGlobalBounds().size;
-                    map->setPosition({(desktopWidth - 250 - 750*(roundCount-1)*map->getScale().x) / 2, (desktopHeight - mapsize.y) / 2});
                 }
             }
 
@@ -437,6 +448,7 @@ int main() {
             }
         }
 
+        //Party Movement
         if(isOnMap){
             if(offset < map->getPosition().x){
                 map->move({-elapsed.asSeconds()*240, 0});
@@ -460,5 +472,6 @@ int main() {
     map.reset();
     party.reset();
     entities.clear();
+    assetManager.clearUnusedAssets();
     return 0;
 }

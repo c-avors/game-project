@@ -2,7 +2,8 @@
 #include "../include/playerCharacter.h"
 #include <algorithm>
 
-bool isTargetValid(std::unique_ptr<Entity> &e) {
+
+bool Entity::isTargetValid(std::unique_ptr<Entity> &e) {
     // If it's an enemy, it's valid.
     // If it's a PlayerCharacter, check getInBattle().
     PlayerCharacter* pc = dynamic_cast<PlayerCharacter*>(e.get());
@@ -18,9 +19,27 @@ Entity::Entity(const std::string& name, const sf::Texture &texture, int speed, i
     hpBarReal.setSize({100,20});
     hpBarReal.setFillColor(sf::Color::Red);
     for(int i = 0; i < 4; ++i) {
-        setMoveInSlot(i, baseMoveset[i]);   
+        setMoveInSlot(i, baseMoveset[i]);
     }
 }
+
+Entity::Entity(const Entity& other) 
+    : sf::Sprite(other), // Copy the sprite state
+      name(other.name), 
+      speed(other.speed), 
+      hp(other.hp), 
+      currentHp(other.currentHp), 
+      attack(other.attack),
+      defence(other.defence),
+      spAttack(other.spAttack),
+      spDefence(other.spDefence),
+      moveset(other.moveset),
+      queuedMove(other.queuedMove),
+      queuedTargetIndex(other.queuedTargetIndex),
+      actionQueued(other.actionQueued),
+      isDown(other.isDown),
+      hpBarBase(other.hpBarBase),
+      hpBarReal(other.hpBarReal) {}
 
 void Entity::setHpBar() {
     hpBarBase.setPosition({getPosition().x+(getGlobalBounds().size.x-hpBarBase.getGlobalBounds().size.x)/2,getPosition().y+getGlobalBounds().size.y+10});
@@ -51,7 +70,6 @@ void Entity::takeDamage(Entity attacker, MoveInstance move) {
     if(move.blueprint->type == Physical) {
         float effectiveDefence = (defence <= 0.0f) ? 1.0f : defence;
         int damageTaken = (42.0f * move.blueprint->power * ((float)(attacker.attack) / effectiveDefence) / 50) + 2;
-        std::cout << damageTaken <<std::endl;
         if (damageTaken <= currentHp) {
             currentHp-=damageTaken;
         }
@@ -91,18 +109,32 @@ void Entity::setTargeting(const int &target) {
 }
 
 void Entity::targetLeft(std::vector<std::unique_ptr<Entity>> &entities, int attackerIndex) {
+    if (entities.empty()) return;
+
+    int originalTarget = targeting;
     do {
         if(targeting == 0) targeting = entities.size() - 1;
         else targeting--;
-    } while ((!entities[targeting]->isTargetable() || targeting == attackerIndex));
+        
+        // Safety break: if we circled back to the start, stop searching
+        if (targeting == originalTarget) break; 
+    } while ((!this->isTargetValid(entities[targeting]) || targeting == attackerIndex));
 }
 
 void Entity::targetRight(std::vector<std::unique_ptr<Entity>> &entities, int attackerIndex) {
+    if (entities.empty()) return;
+
+    int originalTarget = targeting;
     do {
         if(targeting == entities.size() - 1) targeting = 0;
         else targeting++;
-    } while ((!entities[targeting]->isTargetable() || targeting == attackerIndex));
+        
+        // Safety break: if we circled back to the start, stop searching
+        if (targeting == originalTarget) break; 
+    } while ((!this->isTargetValid(entities[targeting]) || targeting == attackerIndex));
 }
+
+//Select target
 void Entity::targetHandler(const sf::Event& event, std::vector<std::unique_ptr<Entity>> &entities, bool &selected, int attackIndex) {
     if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
         if (keyPressed->scancode == sf::Keyboard::Scancode::Left) {
@@ -142,4 +174,18 @@ void Entity::clearQueuedAction() {
 
 bool Entity::getIsDown() const {
     return isDown;
+}
+
+void Entity::setCurrentHp(const int &hp) {
+    currentHp = hp;
+}
+
+int Entity::getBaseHp() const {
+    return hp;
+}
+
+void Entity::setMoveInSlot(int slot, MoveName move) {
+        if (slot < moveset.size()) {
+            moveset[slot] = moveDatabase.createInstance(move);
+        }
 }
