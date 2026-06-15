@@ -18,12 +18,13 @@ protected:
     MoveName queuedMove;
     int queuedTargetIndex = -1;
     std::string name;
+    std::string moveMade;
     std::array<MoveInstance, 4> moveset;
     sf::RectangleShape hpBarBase;
     sf::RectangleShape hpBarReal;
 public:
     Entity(const Entity& other);
-    Entity(const std::string& name, const sf::Texture &texture, int speed, int hp, int attack, int defence, int spAttack, int spDefence, std::array<MoveName, 4> baseMoveset);
+    Entity(const std::string& name, const sf::Texture &texture, int speed, int hp, int attack, int defence, int spAttack, int spDefence, std::array<MoveName, 4> baseMoveset, const std::string& moveMade);
     void setHpBar();
     void draw(sf::RenderWindow& window);
     void takeDamage(Entity attacker, MoveInstance move);
@@ -43,6 +44,7 @@ public:
     int getTargeting() const;
     bool getIsDown() const;
     int getBaseHp() const;
+    std::string getMoveMade() const;
 
     void queueAction(MoveName move, int targetIndex);
     bool hasQueuedAction() const;

@@ -11,7 +11,7 @@ bool Entity::isTargetValid(std::unique_ptr<Entity> &e) {
     return true; // Assume all enemies are valid targets
 }
 
-Entity::Entity(const std::string& name, const sf::Texture &texture, int speed, int hp, int attack, int defence, int spAttack, int spDefence, std::array<MoveName, 4> baseMoveset) : sf::Sprite(texture), name(name), speed(speed), hp(hp), currentHp(hp), attack(attack), defence(defence), spAttack(spAttack),spDefence(spDefence) {
+Entity::Entity(const std::string& name, const sf::Texture &texture, int speed, int hp, int attack, int defence, int spAttack, int spDefence, std::array<MoveName, 4> baseMoveset, const std::string& moveMade) : sf::Sprite(texture), name(name), speed(speed), hp(hp), currentHp(hp), attack(attack), defence(defence), spAttack(spAttack),spDefence(spDefence), moveMade(moveMade) {
     this->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), {texture.getSize().x, texture.getSize().y}));
     hpBarBase.setSize({100,20});
     sf::Color color(94,94,94);
@@ -34,6 +34,7 @@ Entity::Entity(const Entity& other)
       spAttack(other.spAttack),
       spDefence(other.spDefence),
       moveset(other.moveset),
+      moveMade(other.moveMade),
       queuedMove(other.queuedMove),
       queuedTargetIndex(other.queuedTargetIndex),
       actionQueued(other.actionQueued),
@@ -102,6 +103,10 @@ int Entity::getSpeed() const {
 }
 int Entity::getTargeting() const {
     return targeting;
+}
+
+std::string Entity::getMoveMade() const {
+    return moveMade;
 }
 
 void Entity::setTargeting(const int &target) {

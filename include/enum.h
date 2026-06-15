@@ -50,3 +50,9 @@ enum Effect {
     AttackUp,
     VeilUp,
 };
+
+enum BattleActionState {
+    Idle,
+    PlayingAnimation,
+    WaitingForInput
+};

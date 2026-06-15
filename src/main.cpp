@@ -8,6 +8,8 @@
 #include "../include/playerCharacter.h"
 #include "../include/assetsManager.h"
 #include "../include/enemyFactory.h"
+#include "../include/attackAnimation.h"
+#include "../include/animationManager.h"
 #include <memory>
 
 bool speedCompare(const std::unique_ptr<Entity> &e1, const std::unique_ptr<Entity> &e2) {
@@ -22,6 +24,7 @@ int main() {
     sf::Clock clock;
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     AssetManager assetManager;
+    AnimationManager animationManager(assetManager);
     bool battleTriggered = false;
     bool showSelectMenu = true;
     bool isOnMap = false;
@@ -176,11 +179,12 @@ int main() {
                 assetManager.loadTexture("Khafiyn", "../sprites/Khafiyn.png");
                 assetManager.loadTexture("LakeDowager", "../sprites/LakeDowager.png");
                 assetManager.loadTexture("Luminant", "../sprites/Luminant.png");
+                assetManager.loadTexture("BasicAttack", "../sprites/spritesheetBasic.png");
                 if(playersExistnt) {
-                    auto billo = std::make_unique<PlayerCharacter>("Billo", assetManager.getTexture("Billo"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
-                    auto fari = std::make_unique<PlayerCharacter>("Fari", assetManager.getTexture("Fari"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
-                    auto izil = std::make_unique<PlayerCharacter>("Izil", assetManager.getTexture("Izil"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
-                    auto liao = std::make_unique<PlayerCharacter>("Liaoyuan", assetManager.getTexture("Liaoyuan"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle});
+                    auto billo = std::make_unique<PlayerCharacter>("Billo", assetManager.getTexture("Billo"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle}, "BasicAttack");
+                    auto fari = std::make_unique<PlayerCharacter>("Fari", assetManager.getTexture("Fari"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle}, "BasicAttack");
+                    auto izil = std::make_unique<PlayerCharacter>("Izil", assetManager.getTexture("Izil"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle}, "BasicAttack");
+                    auto liao = std::make_unique<PlayerCharacter>("Liaoyuan", assetManager.getTexture("Liaoyuan"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle}, "BasicAttack");
                     billo->setScale({0.25,0.25});
                     billo->setPosition({desktopWidth/6-billo->getGlobalBounds().size.x, 7*desktopHeight/8-billo->getGlobalBounds().size.y});
                     billo->setHpBar();
@@ -341,83 +345,107 @@ int main() {
             //Playing actions
             if(battleState == PlayingActions) {
                 std::sort(entities.begin(), entities.end(), speedCompare);
-                for(auto &entity : entities) {
-                    if(entity->hasQueuedAction()) {
-                        entity->attackAction(entities[entity->getTargetIndex()].get(),entity->getQueuedMove());
-                        std::cout << entity->getName() << " used " << entity->getQueuedMove().getName() << std::endl;
-                        entity->clearQueuedAction();
-                    }
+                // 1. Identify the first entity with a queued action
+                static Entity* activeAttacker = nullptr;
 
-                }
-                battleState = PlayerSelectMove;
-                currentCharacter = 0;
-                //removing fainted entities
-                entities.erase(
-                    std::remove_if(entities.begin(), entities.end(), [](const std::unique_ptr<Entity>& entity) {
-                        return entity->getIsDown(); 
-                    }), 
-                    entities.end()
-                );
-                bool enemiesLeft = false;
-                bool activePlayerLeft = false;
-                for (const auto& entity : entities) {
-                    if (dynamic_cast<Enemy*>(entity.get()) != nullptr) {
-                        enemiesLeft = true;
-                        break;
-                    } else if (auto* pc = dynamic_cast<PlayerCharacter*>(entity.get())) {
-                        // Check if player is in battle AND still standing
-                        if (pc->getInBattle() && !pc->getIsDown()) {
-                            activePlayerLeft = true;
+                if (activeAttacker == nullptr) {
+                    for (auto& entity : entities) {
+                        if (entity->hasQueuedAction()) {
+                            activeAttacker = entity.get();
+                            // Start the animation for this specific entity
+                            animationManager.play(activeAttacker->getMoveMade(), entities[activeAttacker->getTargetIndex()]->getPosition(), 1.0f);
+                            break; // Stop looking, we have one job to do
                         }
                     }
                 }
 
-                //Battle Won
-                if (!enemiesLeft) {
-                    //Reseting Flags
+                // 2. If we have an active attacker, wait for their specific animation
+                if (activeAttacker != nullptr) {
+                    animationManager.update(elapsed.asSeconds());
+
+                    if (!animationManager.isAnimating()) {
+                        // Animation is done, now resolve the game logic
+                        activeAttacker->attackAction(entities[activeAttacker->getTargetIndex()].get(), activeAttacker->getQueuedMove());
+                        std::cout << activeAttacker->getName() << " used " << activeAttacker->getQueuedMove().getName() << std::endl;
+                        
+                        activeAttacker->clearQueuedAction();
+                        activeAttacker = nullptr; // Reset to find the next one in the next frame
+                    }
+                } else {
+                    // 4. No one else has a queued action; finish the turn
                     battleState = PlayerSelectMove;
-                    enemiesRendered = false;
-                    currentStage = Map; 
-                    isOnMap = true;
-                    mapInitialized = false;
-                    showSelectMenu = false;
-                    showMoveMenu = false;
-                    moveMenuBuilt = false;
-                    battleTriggered = false;
-                    roundCount++;
                     currentCharacter = 0;
-                    for(auto &entity : entities) {
-                        PlayerCharacter *playable = dynamic_cast<PlayerCharacter *>(entity.get());
-                        if(playable != nullptr && playable->getInBattle()) {
-                            playable->setInBattle(false);
-                        }
-                        //Heal On Round 5
-                        if(playable != nullptr && roundCount == 5) {
-                            playable->setCurrentHp(playable->getBaseHp());
+                    
+                     //removing fainted entities
+                    entities.erase(
+                        std::remove_if(entities.begin(), entities.end(), [](const std::unique_ptr<Entity>& entity) {
+                            return entity->getIsDown(); 
+                        }), 
+                        entities.end()
+                    );
+                    bool enemiesLeft = false;
+                    bool activePlayerLeft = false;
+                    for (const auto& entity : entities) {
+                        if (dynamic_cast<Enemy*>(entity.get()) != nullptr) {
+                            enemiesLeft = true;
+                            break;
+                        } else if (auto* pc = dynamic_cast<PlayerCharacter*>(entity.get())) {
+                            // Check if player is in battle AND still standing
+                            if (pc->getInBattle() && !pc->getIsDown()) {
+                                activePlayerLeft = true;
+                            }
                         }
                     }
-                }
+                        //Battle Won
+                    if (!enemiesLeft) {
+                        //Reseting Flags
+                        battleState = PlayerSelectMove;
+                        enemiesRendered = false;
+                        currentStage = Map; 
+                        isOnMap = true;
+                        mapInitialized = false;
+                        showSelectMenu = false;
+                        showMoveMenu = false;
+                        moveMenuBuilt = false;
+                        battleTriggered = false;
+                        roundCount++;
+                        currentCharacter = 0;
+                        for(auto &entity : entities) {
+                            PlayerCharacter *playable = dynamic_cast<PlayerCharacter *>(entity.get());
+                            if(playable != nullptr && playable->getInBattle()) {
+                                playable->setInBattle(false);
+                            }
+                            //Heal On Round 5
+                            if(playable != nullptr && roundCount == 5) {
+                                playable->setCurrentHp(playable->getBaseHp());
+                            }
+                        }
+                    }
 
-                //Game Over
-                if (!activePlayerLeft) {
-                    //Reseting Flags
-                    currentStage = MainMenu;
-                    entities.clear();
-                    battleTriggered = false;
-                    showSelectMenu = true;
-                    isOnMap = false;
-                    mapInitialized = false;
-                    battleTexturesLoaded = false;
-                    enemiesRendered = false;
-                    showMoveMenu = false;
-                    moveMenuBuilt = false;
-                    activeFound = false;
-                    playersExistnt = true;
-                    currentCharacter = 0;
-                    chosenMoveSlot = -1; 
-                    roundCount = 1;
-                    selectedTarget = false;
+                    //Game Over
+                    if (!activePlayerLeft) {
+                        //Reseting Flags
+                        currentStage = MainMenu;
+                        entities.clear();
+                        battleTriggered = false;
+                        showSelectMenu = true;
+                        isOnMap = false;
+                        mapInitialized = false;
+                        battleTexturesLoaded = false;
+                        enemiesRendered = false;
+                        showMoveMenu = false;
+                        moveMenuBuilt = false;
+                        activeFound = false;
+                        playersExistnt = true;
+                        currentCharacter = 0;
+                        chosenMoveSlot = -1; 
+                        roundCount = 1;
+                        selectedTarget = false;
+                    }
                 }
+               
+
+                
             }
 
             sf::Text Header(mainFont);
@@ -446,6 +474,8 @@ int main() {
                 moveMenu.update(window);
                 moveMenu.draw(window);
             }
+
+            animationManager.draw(window);
         }
 
         //Party Movement
