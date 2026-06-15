@@ -9,3 +9,12 @@ Enemy::Enemy(const Enemy& other) : Entity(other), ai(other.ai) {}
 AIType Enemy::getAI() const {
     return ai;
 }
+
+void Enemy::scaleUp() {
+    this->attack*1.1;
+    this->defence*1.1;
+    this->spAttack*1.1;
+    this->spDefence*1.1;
+    this->hp*1.1;
+    this->speed*1.1;
+}

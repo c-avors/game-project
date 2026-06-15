@@ -4,7 +4,8 @@ enum GameStage {
     MainMenu,
     Map,
     Battle,
-    Victory
+    Victory,
+    WinScreen
 };
 
 enum BattleState {
@@ -25,7 +26,15 @@ enum MoveName {
     ArmThrust,
     BulkUp,
     DrainPunch,
-    QuickPunch
+    QuickPunch,
+    Constrict,
+    Wrap,
+    TentacleWhip,
+    Grasp,
+    MysticBolt,
+    ArcaneBlast,
+    VoidFlare,
+    StarShower
 };
 
 enum Enemies {

@@ -181,10 +181,10 @@ int main() {
                 assetManager.loadTexture("Luminant", "../sprites/Luminant.png");
                 assetManager.loadTexture("BasicAttack", "../sprites/spritesheetBasic.png");
                 if(playersExistnt) {
-                    auto billo = std::make_unique<PlayerCharacter>("Billo", assetManager.getTexture("Billo"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle}, "BasicAttack");
-                    auto fari = std::make_unique<PlayerCharacter>("Fari", assetManager.getTexture("Fari"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle}, "BasicAttack");
-                    auto izil = std::make_unique<PlayerCharacter>("Izil", assetManager.getTexture("Izil"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle}, "BasicAttack");
-                    auto liao = std::make_unique<PlayerCharacter>("Liaoyuan", assetManager.getTexture("Liaoyuan"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Tackle, Tackle, Tackle, Tackle}, "BasicAttack");
+                    auto billo = std::make_unique<PlayerCharacter>("Billo", assetManager.getTexture("Billo"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{Constrict, Wrap, TentacleWhip, Grasp}, "BasicAttack");
+                    auto fari = std::make_unique<PlayerCharacter>("Fari", assetManager.getTexture("Fari"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{MysticBolt, ArcaneBlast, MysticBolt, StarShower}, "BasicAttack");
+                    auto izil = std::make_unique<PlayerCharacter>("Izil", assetManager.getTexture("Izil"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{MysticBolt, Tackle, VoidFlare, ArmThrust}, "BasicAttack");
+                    auto liao = std::make_unique<PlayerCharacter>("Liaoyuan", assetManager.getTexture("Liaoyuan"), 106, 404, 236 ,297, 113, 306, std::array<MoveName, 4>{QuickPunch, Tackle, CloseCombat, ArmThrust}, "BasicAttack");
                     billo->setScale({0.25,0.25});
                     billo->setPosition({desktopWidth/6-billo->getGlobalBounds().size.x, 7*desktopHeight/8-billo->getGlobalBounds().size.y});
                     billo->setHpBar();
@@ -420,6 +420,9 @@ int main() {
                                 playable->setCurrentHp(playable->getBaseHp());
                             }
                         }
+                        if(roundCount == 13) {
+                            currentStage = WinScreen;
+                        }
                     }
 
                     //Game Over
@@ -446,6 +449,13 @@ int main() {
                
 
                 
+            }
+            if(currentStage == WinScreen) {
+                sf::Text Header(mainFont);
+                Header.setString("You Won");
+                Header.setPosition({0.5*desktopWidth-Header.getGlobalBounds().size.x, 300});
+                Header.setCharacterSize(100);
+                window.draw(Header);
             }
 
             sf::Text Header(mainFont);

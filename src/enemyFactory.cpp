@@ -15,6 +15,8 @@ EnemyFactory::EnemyFactory(AssetManager& assetManager) {
     presets.push_back({"Rose", {Golorch, Golorch, Khafiyn}});
     presets.push_back({"Rosy", {Luminant, Luminant, Luminant, Luminant}});
     presets.push_back({"Missingno", {Alginnus, Alginnus, LakeDowager}});
+    presets.push_back({"Matte", {Alginnus, Golorch, LakeDowager}});
+    presets.push_back({"Particles", {Khafiyn, Khafiyn, LakeDowager}});
 }
 
 //spawns single enemy
@@ -45,3 +47,8 @@ void EnemyFactory::spawnPreset(std::vector<std::unique_ptr<Entity>>& entities, c
         }
     }
 }
+
+void EnemyFactory::incrementWorldLevel() {
+    worldLevel++;
+}
+

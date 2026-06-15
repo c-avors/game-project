@@ -15,8 +15,10 @@ class EnemyFactory {
 private:
     std::map<Enemies, Enemy> enemyDatabase;
     std::vector<EnemyPreset> presets;
+    int worldLevel = 1;
 public:
     EnemyFactory(AssetManager& assetManager);
     std::unique_ptr<Entity> spawnEnemy(Enemies type);
     void spawnPreset(std::vector<std::unique_ptr<Entity>>& entities, const int width, const int heigth);
+    void incrementWorldLevel();
 };
